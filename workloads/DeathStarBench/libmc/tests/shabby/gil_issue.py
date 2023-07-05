@@ -20,9 +20,7 @@ stack = []
 
 
 def singer():
-    i = 0
-    while i < 6:
-        i += 1
+    for i in range(1, 7):
         print('[%d] Oh, jingle bells, jingle bells, Jingle all the way.' % i)
         stack.append('sing')
         time.sleep(0.5)

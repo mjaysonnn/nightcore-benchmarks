@@ -79,14 +79,14 @@ def main():
                 line = re.sub(
                     rexp, "_%s = \"%s\"\n" % (k.capitalize(), v), line
                 )
-            sys.stdout.write(line)
         else:
             for k in subst_list:
                 rexp = "__%s__\s*=.*" % k
                 line = re.sub(rexp, "__%s__ = \"\"" % k, line)
                 rexp = "_%s\s*=.*" % k.capitalize()
                 line = re.sub(rexp, "_%s = \"\"" % k.capitalize(), line)
-            sys.stdout.write(line)
+
+        sys.stdout.write(line)
 
 
 if __name__ == "__main__":

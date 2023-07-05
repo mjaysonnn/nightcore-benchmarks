@@ -31,29 +31,18 @@ class HashRouterCase(unittest.TestCase):
             'test:80000': '127.0.0.1:11212',
             'test:90000': '127.0.0.1:11212',
         }
-        for k in rs:
-            self.assertEqual(mc.get_host_by_key(k), rs[k])
+        for k, v in rs.items():
+            self.assertEqual(mc.get_host_by_key(k), v)
             self.assertEqual(md5_mc.get_host_by_key(k), rs[k])
 
         for addr in server_list:
             ps = addr.split(':')
 
-            if len(ps) == 1:
-                hostname = ps[0]
-                port = 11211
-            else:
-                hostname = ps[0]
-                port = int(ps[1])
-
-            if port == 11211:
-                key = '%s-10' % hostname
-            else:
-                key = '%s:%s-10' % (hostname, port)
-
-            self.assertEqual(mc.get_host_by_key(key),
-                             '%s:%s' % (hostname, port))
-            self.assertEqual(md5_mc.get_host_by_key(key),
-                             '%s:%s' % (hostname, port))
+            port = 11211 if len(ps) == 1 else int(ps[1])
+            hostname = ps[0]
+            key = f'{hostname}-10' if port == 11211 else f'{hostname}:{port}-10'
+            self.assertEqual(mc.get_host_by_key(key), f'{hostname}:{port}')
+            self.assertEqual(md5_mc.get_host_by_key(key), f'{hostname}:{port}')
 
     def test_md5_router_mass(self):
         with open(os.path.join(RES_DIR, 'server_port.csv')) as fhandler:

@@ -31,12 +31,12 @@ class DiveMaster(object):
 class MiscCase(unittest.TestCase):
 
     def test_encode_value(self):
-        expect = (b'(\x02\x00\x00\x00s\x06\x00\x00\x00doubani\x00\x00\x00\x00',
-                  32)
-        data = (b'douban', 0)
         # FIXME
         vi = sys.version_info
         if vi.major == 2 and vi.micro == 7 and vi.minor < 9:
+            expect = (b'(\x02\x00\x00\x00s\x06\x00\x00\x00doubani\x00\x00\x00\x00',
+                      32)
+            data = (b'douban', 0)
             assert encode_value(data, 0) == expect
 
     def test_decode_value(self):
@@ -44,7 +44,7 @@ class MiscCase(unittest.TestCase):
             True,
             0,
             100,
-            int(1000),
+            1000,
             10.24,
             DiveMaster(1024),
             "scubadiving",
@@ -190,8 +190,7 @@ class SingleServerCase(unittest.TestCase):
         assert mc.get('injected') is None
 
     def test_maxiov(self):
-        key_tmpl = 'not_existed.%s'
-        assert self.mc.get_multi([key_tmpl % i for i in range(10000)]) == {}
+        assert self.mc.get_multi([f'not_existed.{i}' for i in range(10000)]) == {}
 
     def test_get_set_raw(self):
         self.mc.set('foo', 233)
@@ -209,7 +208,7 @@ class SingleServerCase(unittest.TestCase):
 
     def test_get_set_large_raw(self):
         key = 'large_raw_key'
-        key_dup = '%s_dup' % key
+        key_dup = f'{key}_dup'
         val = 'i' * int(_DOUBAN_CHUNK_SIZE * 1.5)
         for mc in (self.mc, self.compressed_mc):
             mc.set(key, val)
@@ -254,7 +253,7 @@ class SingleServerCase(unittest.TestCase):
         assert self.mc.get('all_is_well') == 'bingo'
 
     def test_flush_all(self):
-        keys = ["flush_all_check_%s" % i for i in range(1000)]
+        keys = [f"flush_all_check_{i}" for i in range(1000)]
         value = "testing_flush_all"
         dict_to_set = {
             key: value

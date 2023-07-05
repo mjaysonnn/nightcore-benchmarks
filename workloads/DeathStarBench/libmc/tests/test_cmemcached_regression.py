@@ -58,8 +58,8 @@ class CmemcachedRegressionCase(unittest.TestCase):
         self.mc.set("key_int", 1)
         self.assertEqual(self.mc.get("key_int"), True)
 
-        self.mc.set("key_long", int(1234567890))
-        self.assertEqual(self.mc.get("key_long"), int(1234567890))
+        self.mc.set("key_long", 1234567890)
+        self.assertEqual(self.mc.get("key_long"), 1234567890)
 
         self.mc.set("key_object", BigObject())
         self.assertEqual(self.mc.get("key_object"), BigObject())
@@ -127,8 +127,8 @@ class CmemcachedRegressionCase(unittest.TestCase):
         self.assertEqual(self.mc.add(key, 'tt'), True)
         self.assertEqual(self.mc.get(key), 'tt')
         self.assertEqual(self.mc.add(key, 'tt'), 0)
-        self.mc.delete(key + '2')
-        self.assertEqual(self.mc.add(key + '2', range(10)), True)
+        self.mc.delete(f'{key}2')
+        self.assertEqual(self.mc.add(f'{key}2', range(10)), True)
 
     def test_replace(self):
         key = 'test_replace'
@@ -150,9 +150,8 @@ class CmemcachedRegressionCase(unittest.TestCase):
         self.assertEqual(self.mc.get(key), b'before\n' + value * 2)
 
     def test_set_multi(self):
-        values = dict(('key%s' % k, ('value%s' % k) * 100)
-                      for k in range(1000))
-        values.update({' ': ''})
+        values = {f'key{k}': f'value{k}' * 100 for k in range(1000)}
+        values[' '] = ''
         self.assertEqual(self.mc.set_multi(values), False)
         del values[' ']
         self.assertEqual(self.mc.get_multi(list(values.keys())), values)
@@ -371,8 +370,8 @@ class CmemcachedRegressionCase(unittest.TestCase):
                         reason='cmemcached and numpy are not installed')
     def test_general_get_set_regression(self):
         key = 'anykey'
-        key_dup = '%s_dup' % key
-        for val in ('x', np.uint32(1), np.int32(2), 0, int(0), False, True):
+        key_dup = f'{key}_dup'
+        for val in ('x', np.uint32(1), np.int32(2), 0, 0, False, True):
             self.old_mc.set(key, val)
             val2 = self.mc.get(key)
             assert val2 == val
@@ -384,7 +383,7 @@ class CmemcachedRegressionCase(unittest.TestCase):
                         reason='cmemcached is not installed')
     def test_large_mc_split_regression(self):
         key = 'anykey'
-        key_dup = '%s_dup' % key
+        key_dup = f'{key}_dup'
         for val in ('i' * int(_DOUBAN_CHUNK_SIZE * 1.5), 'small_value'):
             self.old_mc.set(key, val)
             assert self.mc.get(key) == self.old_mc.get(key) == val
@@ -428,19 +427,19 @@ class CmemcachedRegressionPrefixCase(unittest.TestCase):
         raw_mc.delete('a')
         prefixed_mc.set('a', 1)
         assert(prefixed_mc.get('a') == 1)
-        assert(raw_mc.get(self.prefix + 'a') == 1)
+        assert raw_mc.get(f'{self.prefix}a') == 1
         assert(raw_mc.get('a') is None)
 
         prefixed_mc.add('b', 2)
         assert(prefixed_mc.get('b') == 2)
-        assert(raw_mc.get(self.prefix + 'b') == 2)
+        assert raw_mc.get(f'{self.prefix}b') == 2
         assert(raw_mc.get('b') is None)
 
         prefixed_mc.incr('b')
         assert(prefixed_mc.get('b') == 3)
-        assert(raw_mc.get(self.prefix + 'b') == 3)
+        assert raw_mc.get(f'{self.prefix}b') == 3
 
-        raw_mc.decr(self.prefix + 'b')
+        raw_mc.decr(f'{self.prefix}b')
         assert(prefixed_mc.get('b') == 2)
 
         prefixed_mc.set_multi({'x': 'a', 'y': 'b'})
@@ -451,12 +450,12 @@ class CmemcachedRegressionPrefixCase(unittest.TestCase):
         prefixed_mc.set('?foo', 'bar')
         assert prefixed_mc.get('?foo') == 'bar'
         assert prefixed_mc.get_multi(['?foo']) == {'?foo': 'bar'}
-        assert raw_mc.get('?%sfoo' % self.prefix) == 'bar'
+        assert raw_mc.get(f'?{self.prefix}foo') == 'bar'
 
         prefixed_mc.set_multi({'?bar': 'foo'})
         assert prefixed_mc.get('?bar') == 'foo'
-        assert raw_mc.get('?%sbar' % self.prefix) == 'foo'
-        assert raw_mc.get_list(['?%sbar' % self.prefix]) == ['foo']
+        assert raw_mc.get(f'?{self.prefix}bar') == 'foo'
+        assert raw_mc.get_list([f'?{self.prefix}bar']) == ['foo']
 
     def test_ketama(self):
         mc = Client(

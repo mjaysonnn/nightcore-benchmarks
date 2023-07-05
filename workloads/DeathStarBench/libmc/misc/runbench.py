@@ -33,24 +33,23 @@ class Prefix(object):
         self.prefix = prefix
 
     def __repr__(self):
-        return "Prefix " + str(self.mc)
+        return f"Prefix {str(self.mc)}"
 
     def __prepare_prefix_keys(self, keys):
         if isinstance(keys, dict):
-            prepared_keys = {}
-            for key, value in keys.items():
-                prepared_keys[self.prefix + key] = value
-            return prepared_keys
+            return {self.prefix + key: value for key, value in keys.items()}
         elif isinstance(keys, (list, tuple)):
             return [self.prefix + v for v in keys]
         else:
             return self.prefix + keys
 
     def get_multi(self, keys):
-        r = {}
-        for key, value in self.mc.get_multi(self.__prepare_prefix_keys(keys)).items():
-            r[key.replace(self.prefix, '', 1)] = value
-        return r
+        return {
+            key.replace(self.prefix, '', 1): value
+            for key, value in self.mc.get_multi(
+                self.__prepare_prefix_keys(keys)
+            ).items()
+        }
 
     def __getattr__(self, name):
         if name in ('get', 'add', 'replace', 'set', 'cas', 'delete', 'incr', 'decr', 'prepend', 'append', 'touch',
@@ -142,9 +141,8 @@ def bench_set(mc, key, data):
     if isinstance(mc.mc, libmc.Client):
         if not mc.set(key, data):
             logger.warn('%r.set(%r, ...) fail', mc, key)
-    else:
-        if not mc.set(key, data, min_compress_len=4001):
-            logger.warn('%r.set(%r, ...) fail', mc, key)
+    elif not mc.set(key, data, min_compress_len=4001):
+        logger.warn('%r.set(%r, ...) fail', mc, key)
 
 
 @benchmark_method
@@ -159,9 +157,8 @@ def bench_set_multi(mc, keys, pairs):
     if isinstance(mc.mc, libmc.Client):
         if not ret:
             logger.warn('%r.set_multi fail', mc)
-    else:
-        if ret:
-            logger.warn('%r.set_multi(%r) fail', mc, ret)
+    elif ret:
+        logger.warn('%r.set_multi(%r) fail', mc, ret)
 
 
 def multi_pairs(n, val_len):
@@ -242,8 +239,8 @@ def bench(participants=participants, benchmarks=benchmarks, bench_time=BENCH_TIM
     """Do you even lift?"""
 
     mcs = [p.factory() for p in participants]
-    means = [[] for p in participants]
-    stddevs = [[] for p in participants]
+    means = [[] for _ in participants]
+    stddevs = [[] for _ in participants]
 
     # Have each lifter do one benchmark each
     last_fn = None
