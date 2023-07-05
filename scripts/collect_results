@@ -54,14 +54,20 @@ def print_results(dir_name, title, prefix=''):
 
 if __name__ == '__main__':
     for workload in WORKLOADS:
-        dir_name = '%s_singlenode' % (workload,)
+        dir_name = f'{workload}_singlenode'
         if workload == 'socialnetwork':
-            print_results(dir_name, title='%s write (single node)' % (workload,),
-                          prefix='write_')
-            print_results(dir_name, title='%s mixed (single node)' % (workload,),
-                          prefix='mixed_')
+            print_results(
+                dir_name,
+                title=f'{workload} write (single node)',
+                prefix='write_',
+            )
+            print_results(
+                dir_name,
+                title=f'{workload} mixed (single node)',
+                prefix='mixed_',
+            )
         else:
-            print_results(dir_name, title='%s (single node)' % (workload,))
+            print_results(dir_name, title=f'{workload} (single node)')
     for workload in WORKLOADS:
-        dir_name = '%s_4node' % (workload,)
-        print_results(dir_name, title='%s (single node)' % (workload,))
+        dir_name = f'{workload}_4node'
+        print_results(dir_name, title=f'{workload} (single node)')

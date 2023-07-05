@@ -25,9 +25,7 @@ class Server(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 def is_valid_key(key):
     if len(key) > 250:
         return False
-    if any(c in key for c in (b' ', b'\0', b'\r', b'\n')):
-        return False
-    return True
+    return all(c not in key for c in (b' ', b'\0', b'\r', b'\n'))
 
 
 class MemcachedProvider(object):
@@ -102,7 +100,7 @@ class MemcachedProvider(object):
         return b'VERSION 1.0.24-shabby\r\n'
 
     def process_rest(self, request):
-        print('unexpected request: %s' % request)
+        print(f'unexpected request: {request}')
         return b'ERROR\r\n'
 
     def __getattr__(self, name):
@@ -122,21 +120,15 @@ class Handler(SocketServer.BaseRequestHandler):
                 try:
                     req += self.request.recv(8192)
                 except socket.error as ex:
-                    if ex.errno == 54:
-                        pass
-                    else:
+                    if ex.errno != 54:
                         raise ex
 
-            print('> %s' % req[:-2])
+            print(f'> {req[:-2]}')
             if not req.strip() or req.strip() == b'quit':
                 break
             pos_space = req.find(b' ')
-            if pos_space > 0:
-                meth = req[:pos_space]
-            else:
-                meth = req.rstrip()
-
-            res = getattr(self.mcp, 'process_%s' % meth.decode('ascii'), )(req)
+            meth = req[:pos_space] if pos_space > 0 else req.rstrip()
+            res = getattr(self.mcp, f"process_{meth.decode('ascii')}")(req)
             if res is None:
                 memcached.shutdown()
                 return
@@ -150,7 +142,7 @@ class Handler(SocketServer.BaseRequestHandler):
                     print('sleep and send more')
                     time.sleep(BLOCKING_SECONDS * 2)
 
-            print('< %s' % res[:-2])
+            print(f'< {res[:-2]}')
 
 
 def main(argv):
@@ -160,7 +152,7 @@ def main(argv):
         port = int(argv[1])
 
     memcached = Server(("", port), Handler)
-    print('serve at tcp://%s:%s' % ('0.0.0.0', port))
+    print(f'serve at tcp://0.0.0.0:{port}')
     try:
         memcached.serve_forever()
     except KeyboardInterrupt:
