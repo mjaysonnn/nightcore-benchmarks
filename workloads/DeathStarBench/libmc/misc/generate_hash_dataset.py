@@ -39,10 +39,7 @@ def compute_md5(key):
     digest = md5.digest()
 
     def convert(d):
-        if isinstance(d, int):
-            return np.uint32(d & 0xFF)
-        else:
-            return np.uint32(ord(d) & 0xFF)
+        return np.uint32(d & 0xFF) if isinstance(d, int) else np.uint32(ord(d) & 0xFF)
 
     return ((convert(digest[3]) << 24) |
            (convert(digest[2]) << 16) |
@@ -58,8 +55,8 @@ U32_HASH_FN_DICT = {
 }
 
 def main(argv):
-    if not len(argv) == 2:
-        print("usage: python %s in.txt" % argv[0])
+    if len(argv) != 2:
+        print(f"usage: python {argv[0]} in.txt")
         return 1
 
     input_path = os.path.abspath(sys.argv[1])
@@ -72,7 +69,7 @@ def main(argv):
 
     for hash_name, (hash_fn, hash_rst) in U32_HASH_FN_DICT.items():
         prefix, dot_ext = os.path.splitext(input_path)
-        out_path = '%s_%s%s' % (prefix, hash_name, dot_ext)
+        out_path = f'{prefix}_{hash_name}{dot_ext}'
         with open(out_path, 'w') as fhandler:
             fhandler.writelines(("%s\r\n" % h for h in hash_rst))
         print(out_path)
